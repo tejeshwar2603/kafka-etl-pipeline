@@ -1,17 +1,24 @@
+import os
 import pandas as pd
 from sqlalchemy import create_engine
 
 # PostgreSQL connection function using SQLAlchemy
 def create_database_connection():
-    
-    engine = create_engine('postgresql://postgres:khsbuPOSTGRE%401154@localhost:5432/mydatabase')
-    return engine
+    # For local testing, use SQLite
+    database_url = 'sqlite:///messages.db'
+    return create_engine(database_url)
 
 # Load data into Pandas DataFrame
 def load_data_to_dataframe():
     engine = create_database_connection()
     query = "SELECT * FROM messages;"  # Query to select all data from messages table
-    df = pd.read_sql(query, engine)  # Load data into DataFrame using SQLAlchemy engine
+    try:
+        df = pd.read_sql(query, engine)  # Load data into DataFrame using SQLAlchemy engine
+    except Exception as exc:
+        raise RuntimeError(
+            "Unable to load data from the messages table. "
+            "Check the database connection, table name, and network access."
+        ) from exc
     return df
 
 # Perform ETL on the data

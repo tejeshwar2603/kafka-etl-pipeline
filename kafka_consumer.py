@@ -1,23 +1,16 @@
 import json
-import psycopg2
-from psycopg2 import sql
+import sqlite3
 from confluent_kafka import Consumer, KafkaException
 
-# Function to create a PostgreSQL database connection and table
+# Function to create a SQLite database connection and table
 def create_database():
-    conn = psycopg2.connect(
-        dbname='mydatabase',      
-        user='postgres',          
-        password='khsbuPOSTGRE@1154', 
-        host='localhost',        
-        port='5432'               
-    )
+    conn = sqlite3.connect('messages.db')
     cursor = conn.cursor()
     cursor.execute(''' 
         CREATE TABLE IF NOT EXISTS messages (
-            id SERIAL PRIMARY KEY,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             message TEXT NOT NULL,
-            timestamp TIMESTAMP NOT NULL
+            timestamp TEXT NOT NULL
         )
     ''')  # Create a table if it doesn't exist
     conn.commit()
@@ -26,10 +19,9 @@ def create_database():
 # Function to insert a message into the database
 def insert_message(conn, message):
     cursor = conn.cursor()
-    insert_query = sql.SQL(''' 
-        INSERT INTO messages (message, timestamp) VALUES (%s, %s)
-    ''')
-    cursor.execute(insert_query, (message['message'], message['timestamp']))
+    cursor.execute(''' 
+        INSERT INTO messages (message, timestamp) VALUES (?, ?)
+    ''', (message['message'], message['timestamp']))
     conn.commit()
 
 # Function to create a Kafka consumer
